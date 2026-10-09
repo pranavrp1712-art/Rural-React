@@ -1,0 +1,584 @@
+@import 'tailwindcss';
+
+/**
+ * Hover gating. Touch devices fire hover on tap, which leaves a card
+ * stuck in its hover state after a press. Every hover effect on the
+ * page goes behind this variant.
+ */
+@custom-variant hoverable (@media (hover: hover) and (pointer: fine));
+
+/* ------------------------------------------------------------------
+   Design tokens. Every colour, font, radius and elevation used in a
+   component resolves through one of these. No one off values in JSX.
+
+   Direction (md/01 §1, ui-ux-pro-max "Trust & Authority"): a cool
+   industrial white page, punctuated by panel-navy bands for the hero,
+   the tagline, the dashboard preview and the closing CTA. Orange is
+   reserved for action and attention, green for live / ready.
+   ------------------------------------------------------------------ */
+@theme {
+  /* Type. Barlow Semi Condensed reads like panel signage and carries
+     headings only. Plex Sans is the working face. Plex Mono is kept
+     for instrument tags and live values. */
+  --font-display: 'Barlow Semi Condensed', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Nameplate radii. Small and deliberate, never one big radius on
+     everything. Remapping the scale keeps existing class names. */
+  --radius-sm: 2px;
+  --radius-md: 3px;
+  --radius-lg: 4px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
+
+  /* --- Light surfaces: enclosure white -------------------------- */
+  --color-page: #f4f6f7;
+  --color-card: #ffffff;
+  --color-sunk: #ebeef1;
+  --color-hover: #e7ecf1;
+  --color-rule: #d6dde4;
+  --color-rule-strong: #a3b1bf;
+
+  /* --- Ink on light. All pass AA on page, card and sunk. -------- */
+  --color-ink: #0e1d31;
+  --color-ink-muted: #4a5660;
+  --color-ink-faint: #5d6975;
+
+  /* --- Panel-navy bands ---------------------------------------- */
+  --color-band: #0e1d31;
+  --color-band-raised: #152a45;
+  --color-band-high: #1c3657;
+  --color-band-rule: #2a4466;
+  --color-band-ink: #f4f6f7;
+  --color-band-ink-muted: #b7c2ce;
+  --color-band-ink-faint: #8c9aaa;
+
+  /* --- Brand accents. Meaning carrying, never decorative. ------- */
+  --color-signal-orange: #f26a1d;
+  --color-signal-orange-hover: #ff7d33;
+  /* Text on an orange fill. White fails AA (3.1:1); navy is 5.5:1. */
+  --color-on-signal: #0e1d31;
+  --color-danger: #b42318;
+  --color-process-green: #1e9c6b;
+  --color-process-cyan: #0e7fb0;
+  --color-electric-blue: #2f6db5;
+  --color-amber-glow: #9a5f00;
+  /* Text safe accent values for light surfaces. */
+  --color-signal-ink: #b5470c;
+  --color-process-ink: #137a52;
+  --color-cyan-ink: #0b6a93;
+  --color-deep-blue: #12365f;
+
+  /* --- Elevation. Flat, printed, a hairline and a soft drop. ---- */
+  --shadow-e1: 0 1px 0 rgba(14, 29, 49, 0.04), 0 1px 2px rgba(14, 29, 49, 0.06);
+  --shadow-e2: 0 1px 2px rgba(14, 29, 49, 0.06), 0 4px 12px rgba(14, 29, 49, 0.08);
+  --shadow-e3: 0 2px 4px rgba(14, 29, 49, 0.06), 0 16px 40px rgba(14, 29, 49, 0.14);
+
+  /* --- Motion. Every transition names one of these. ------------ */
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* ------------------------------------------------------------------
+   Band surface. Inside a navy band the same token names resolve to
+   dark-surface values, so a component written with text-ink or
+   bg-card reads correctly on either surface without a second variant.
+   ------------------------------------------------------------------ */
+@utility surface-band {
+  --color-card: #152a45;
+  --color-sunk: #11233b;
+  --color-hover: #1c3657;
+  --color-rule: #2a4466;
+  --color-rule-strong: #3d5a80;
+  --color-ink: #f4f6f7;
+  --color-ink-muted: #b7c2ce;
+  --color-ink-faint: #8c9aaa;
+  --color-signal-ink: #ff9a5c;
+  --color-process-ink: #4ade9f;
+  --color-cyan-ink: #6fd0fb;
+  --color-deep-blue: #8fb8ee;
+  --color-amber-glow: #f5b83d;
+  --color-process-cyan: #38bdf8;
+  --color-electric-blue: #7cb0ff;
+  --grid-line: rgba(255, 255, 255, 0.045);
+  background-color: var(--color-band);
+  color: var(--color-band-ink-muted);
+}
+
+@layer base {
+  :root {
+    --grid-line: rgba(18, 54, 95, 0.06);
+    color-scheme: light;
+  }
+
+  /* ----------------------------------------------------------------
+     Dark theme (md/improve.md §1B). The same token names, re-stepped
+     for a panel-navy canvas; every text pair re-checked for AA. The
+     inline script in index.html resolves "system" to light or dark
+     and sets data-theme before first paint, so there is no flash.
+     Orange and green keep their hue; only the text-safe steps lift.
+     ---------------------------------------------------------------- */
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+    --color-page: #0e1d31;
+    --color-card: #152a45;
+    --color-sunk: #11233b;
+    --color-hover: #1c3657;
+    --color-rule: #263f60;
+    --color-rule-strong: #3d5a80;
+    --color-ink: #eef2f6;
+    --color-ink-muted: #b7c2ce;
+    --color-ink-faint: #94a3b4;
+    /* Bands sink below the page so they still read as bands. */
+    --color-band: #08121f;
+    --color-band-raised: #10213a;
+    --color-band-high: #172d4b;
+    --color-band-rule: #243d5f;
+    --color-danger: #ff8f80;
+    --color-process-cyan: #38bdf8;
+    --color-electric-blue: #4f93ea;
+    --color-amber-glow: #f5b83d;
+    --color-signal-ink: #ff9a5c;
+    --color-process-ink: #4ade9f;
+    --color-cyan-ink: #6fd0fb;
+    --color-deep-blue: #8fb8ee;
+    --shadow-e1: 0 1px 0 rgba(0, 0, 0, 0.25), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-e2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.35);
+    --shadow-e3: 0 2px 4px rgba(0, 0, 0, 0.3), 0 16px 40px rgba(0, 0, 0, 0.5);
+    --grid-line: rgba(255, 255, 255, 0.045);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* the sticky nav must not cover an anchored heading */
+    scroll-padding-top: 88px;
+  }
+
+  body {
+    background-color: var(--color-page);
+    color: var(--color-ink-muted);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+    color: var(--color-ink);
+    line-height: 1.1;
+  }
+
+  p,
+  li {
+    text-wrap: pretty;
+  }
+
+  button,
+  [role='button'],
+  a,
+  summary {
+    touch-action: manipulation;
+  }
+
+  button:not(:disabled),
+  [role='button'],
+  summary {
+    cursor: pointer;
+  }
+
+  /* Visible focus ring everywhere. Accessibility requirement. */
+  :focus-visible {
+    outline: 2px solid var(--color-signal-orange);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-signal-orange);
+    color: var(--color-on-signal);
+  }
+}
+
+@layer utilities {
+  /* Kept as a name so existing markup still compiles; it is now plain
+     ink. Gradient text was removed from the brief. */
+  .heading-gradient,
+  .heading-sheen {
+    color: inherit;
+  }
+
+  /* A DIN rail: the dashed divider used inside panels. */
+  .rail-divider {
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--color-rule) 0 6px,
+      transparent 6px 12px
+    );
+  }
+
+  .rail-divider-band {
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--color-band-rule) 0 6px,
+      transparent 6px 12px
+    );
+  }
+
+  /* Drafting sheet grid. Line colour follows the surface. */
+  .sheet-grid,
+  .blueprint-grid {
+    background-image:
+      linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+    background-size: 32px 32px;
+  }
+
+  .sheet-grid {
+    background-size: 48px 48px;
+    -webkit-mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 45%, transparent 100%);
+    mask-image: radial-gradient(ellipse 85% 75% at 50% 45%, #000 45%, transparent 100%);
+  }
+
+  /* The backplane a module card seats into: slot marks. */
+  .backplane {
+    background-image: repeating-linear-gradient(
+      to bottom,
+      var(--color-rule) 0 2px,
+      transparent 2px 10px
+    );
+  }
+
+  /* Display type: the signage face, tightened slightly. */
+  .display {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+
+  /* Figures read as an instrument readout. */
+  .readout {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+
+  /* Hazard stripe: the one ornament allowed, used as a thin rule on
+     the final CTA band, the way it marks an enclosure edge. */
+  .hazard-rule {
+    background-image: repeating-linear-gradient(
+      -45deg,
+      var(--color-signal-orange) 0 10px,
+      var(--color-band) 10px 20px
+    );
+  }
+
+  /* Retired decoration. The class names stay valid so nothing breaks,
+     but they no longer paint glows, blur or grain. */
+  .grain,
+  .ambient-orb,
+  .glow-orange,
+  .glow-green,
+  .glow-cyan {
+    box-shadow: none;
+  }
+  .ambient-orb {
+    display: none;
+  }
+  .glass-card {
+    background-color: var(--color-card);
+  }
+  .glass-band {
+    background-color: var(--color-band-raised);
+  }
+}
+
+/* ------------------------------------------------------------------
+   Hero signal path. The one orchestrated moment: a pulse travels the
+   wire from process to cloud and latches each node's status LED as it
+   passes. It plays once, then the diagram rests. Only stroke-dashoffset
+   and opacity animate.
+   ------------------------------------------------------------------ */
+@keyframes signal-travel {
+  from {
+    stroke-dashoffset: 1600;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes led-latch {
+  from {
+    opacity: 0.15;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes led-breathe {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.signal-wire-pulse {
+  stroke-dasharray: 160 1440;
+  stroke-dashoffset: 1600;
+  animation: signal-travel 3.2s var(--ease-in-out) 0.4s 1 forwards;
+}
+
+.signal-led {
+  opacity: 0.15;
+  animation: led-latch 240ms var(--ease-out) forwards;
+}
+
+/* The DEMO DATA badge LED: the only looping motion, and it means "live". */
+.demo-led {
+  animation: led-breathe 2.4s ease-in-out infinite;
+}
+
+/* Kept for markup compatibility; a steady LED, no radar ring. */
+.radar-ping,
+.radar-ping-orange {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .signal-wire-pulse {
+    display: none;
+  }
+
+  .signal-led,
+  .demo-led {
+    opacity: 1;
+    animation: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    animation-delay: 0s !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* ------------------------------------------------------------------
+   Motion system. One rhythm for the whole site: things arrive with a
+   deceleration curve, lists arrive in order, and nothing loops except
+   what means "live". Everything resolves to its final state under
+   prefers-reduced-motion (the block above collapses all durations).
+   ------------------------------------------------------------------ */
+:root {
+  --ease-rise: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Headings: each word rises out of a mask, the label rule draws in. */
+.split-word {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: top;
+  padding-bottom: 0.1em;
+  margin-bottom: -0.1em;
+}
+.split-word > span {
+  display: inline-block;
+  transform: translateY(108%);
+  transition: transform 720ms var(--ease-rise);
+  transition-delay: calc(var(--i, 0) * 45ms + var(--d, 0ms));
+}
+[data-shown] .split-word > span {
+  transform: none;
+}
+.heading-in > span:first-child {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 600ms var(--ease-rise);
+}
+.heading-in[data-shown] > span:first-child {
+  clip-path: inset(0 0 0 0);
+}
+.heading-in > p {
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 500ms var(--ease-out) 220ms,
+    transform 600ms var(--ease-rise) 220ms;
+}
+.heading-in[data-shown] > p {
+  opacity: 1;
+  transform: none;
+}
+
+/* Lists arrive in order. */
+[data-stagger] > * {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 450ms var(--ease-out),
+    transform 600ms var(--ease-rise);
+  transition-delay: calc(var(--i, 0) * var(--step, 60ms));
+}
+[data-stagger='rack'] > * {
+  transform: translateX(-28px);
+}
+[data-stagger][data-shown] > * {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hero entrance, once, on load. */
+@keyframes hero-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-settle {
+  from {
+    transform: scale(1.08);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.hero-in {
+  animation: hero-rise 700ms var(--ease-rise) both;
+  animation-delay: var(--d, 0ms);
+}
+.hero-photo {
+  animation: hero-settle 2.6s var(--ease-rise) both;
+}
+
+/* Cursor spotlight: a soft orange light follows the pointer inside a card. */
+.spotlight {
+  isolation: isolate;
+}
+.spotlight::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 250ms var(--ease-out);
+  background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 50%), color-mix(in oklab, var(--color-signal-orange) 11%, transparent), transparent 70%);
+}
+.spotlight:hover::before {
+  opacity: 1;
+}
+.lift {
+  transition:
+    transform 250ms var(--ease-rise),
+    box-shadow 250ms var(--ease-out),
+    border-color 150ms var(--ease-out);
+}
+@media (hover: hover) and (pointer: fine) {
+  .lift:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-e3);
+  }
+}
+
+/* Primary buttons: a single light sweep across on hover. */
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+.btn-sheen::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-120%) skewX(-18deg);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.35), transparent);
+  pointer-events: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .btn-sheen:hover::after {
+    transform: translateX(120%) skewX(-18deg);
+    transition: transform 700ms var(--ease-rise);
+  }
+}
+
+/* Drafting grid on dark bands drifts very slowly, like a plotter bed. */
+@keyframes grid-drift {
+  to {
+    background-position: 32px 32px;
+  }
+}
+.grid-drift {
+  animation: grid-drift 6s linear infinite;
+}
+
+/* Architecture chain: a packet runs along the wire once. */
+@keyframes packet-run {
+  from {
+    left: 0;
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  to {
+    left: 100%;
+    opacity: 0;
+  }
+}
+.packet {
+  position: absolute;
+  top: 50%;
+  width: 56px;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, transparent, var(--color-signal-orange));
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--color-signal-orange) 30%, transparent);
+  animation: packet-run 1.5s var(--ease-in-out) both;
+}
+
+/* Continuous flow along an industry's process strip: it is live. */
+@keyframes flow-dash {
+  to {
+    background-position: 12px 0;
+  }
+}
+.flow-line {
+  background-image: repeating-linear-gradient(90deg, var(--color-signal-orange) 0 6px, transparent 6px 12px);
+  animation: flow-dash 700ms linear infinite;
+}
+
+/* Route change on the public site: the new page settles in. */
+@keyframes route-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.route-enter {
+  animation: route-enter 380ms var(--ease-rise) both;
+}

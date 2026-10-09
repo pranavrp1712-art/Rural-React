@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /portal
+Disallow: /login
+Disallow: /signup
+Disallow: /verify-email
+Disallow: /forgot-password
+Disallow: /reset-password
+
+Sitemap: https://ruralreact.in/sitemap.xml
